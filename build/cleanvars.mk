@@ -1,5 +1,0 @@
-Target = 
-OtherFiles = 
-Pdf =
-Tex =
-
