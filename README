@@ -1,0 +1,19 @@
+run by 
+$make target 
+to view target,
+e.g. make ril to generate output/ril.pdf and run it.
+
+run 
+$make target.pdf
+to generate pdf file
+
+If you want to put your .tex file into seperated directory, you have to create a file named 'config.mk` inside it.
+like the git-flow example, you can define template information there or just keep it empty.
+But this file IS NECESSARY.
+
+Compile these file requires pdflatex and beamer extension:
+
+I recommand texlive distribution: http://www.tug.org/texlive/
+And beamer class: https://bitbucket.org/rivanvx/beamer/wiki/Home 
+
+

@@ -1,0 +1,226 @@
+\documentclass{beamer}
+\usepackage{listings}
+
+\usetheme{progressbar}
+\progressbaroptions{titlepage=normal, frametitle=normal}
+
+\title{OBS - OpenSuSE Build Service}
+\institute{Elektrobit Wireless(2010)}
+\author{Lifu Zhang}
+\date{}
+\logo{\includegraphics[width=1cm]{linuxfb-logo.png}}
+
+\begin{document}
+\setbeamertemplate{background}{\includegraphics[height=\paperheight]{progressbar/slide.png}}
+
+\lstset{% general command to set parameter(s)
+basicstyle=\scriptsize,
+% print whole listing small
+keywordstyle=\color{black}\bfseries\underbar,
+% underlined bold black keywords
+identifierstyle=,
+% nothing happens
+stringstyle=\color{purple}\ttfamily,
+% typewriter type for strings
+showstringspaces=false}
+% no special string spaces
+
+\maketitle
+
+\section*{Outline}
+\begin{frame}
+  \frametitle{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Introduciton}
+\begin{frame}
+  \frametitle{OBS's Ability}
+  \begin{itemize}
+    \item What OBS Can Do:
+      \begin{itemize}
+	\item Build RPM Packages For different platforms with smae copy of code.
+	\item Publish rpm as 'repository', easy for package mgmt tools to use
+      \end{itemize}
+    \item What OBS Can NOT:
+      \begin{itemize}
+	\item Create MeeGo Image.
+	\item Testing.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Terms in OBS: Project, Repository, Arch, Package}
+  \begin{itemize}
+    \item Package: A software package, contains source tarball, spec file, and (maybe) patches.
+    \item Project: A group of Package, with config for build environmet, repositories, and archs.
+    \item Repository: A place to organize and publish binary/source packages
+    \item Arch: Architectures, a repo may contains multipule archs
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{OBS's Interfaces}
+  \begin{itemize}
+    \item OBS API, a RESTful web interface.
+    \item OSC, Command line interface based on API
+    \item WebUI, Web application based on OBS API
+    \item Event, obs have a way to generate events
+  \end{itemize}
+\end{frame}
+
+\section{Using OBS}
+\subsection{Getting Started}
+\begin{frame}
+  \frametitle{Hello obs - build an Qt Application for MeeGo}
+  \begin{itemize}
+    \item Prepare an source tarball
+    \item Create .spec file
+    \item Create "package" on OBS Server
+    \item Upload sources
+    \item Monitor Build Process
+    \item Get Binary Packages(Build results)
+  \end{itemize}
+\end{frame}
+
+\subsection{OBS Commandline Client}
+\begin{frame}[fragile]
+  \frametitle{Setup OSC tool}
+  \begin{itemize}
+    \item Install osc \\
+      Get osc from site http://software.opensuse.org/search/
+    \item Script 'oscl' \\
+      To operate local obs server, we could use a script 'oscl' 
+  \end{itemize}
+  \lstset{language=bash}
+  \begin{lstlisting}
+  #!/bin/bash
+  API_URL="http://cnbjas56.cn.ebgroup.elektrobit.com:81"
+  export http_proxy="" 
+  osc -A $API_URL $@
+  \end{lstlisting}
+\end{frame}
+\begin{frame}
+  \frametitle{Frequent used commands}
+  \begin{itemize}
+    \item checkout(co): checkout prjoect or package
+    \item commit(ci): commit local sources to server, must run in a package working directory
+    \item list(ls): list project in obs or packages in a project
+    \item rdelete: delete project or package on obs server
+    \item deleterequest(dr): for common user who didn't have privileges, could ask for administrator to do the deletion
+    \item meta: vie or edit meta info of projects or packages, to create a project \& package, just edit meta info for not existed items.
+  \end{itemize}
+  For more details, please see osc manpage(1) (man osc) 
+\end{frame}
+
+\begin{frame}
+  \frametitle{Brief Introduction to OBS Webui}
+  The operations we can do in webui:\\
+  \begin{itemize}
+    \item Register \& Login
+    \item Monitor Building process
+    \item Manage projects \& packages
+    \item \alert{Deprecated} manage package source files
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Behind the scene: How did obs build packages}
+  \begin{itemize}
+    \item Create virtual root
+    \item Do 'rpmbuild'
+  \end{itemize}
+\end{frame}
+
+\section{Set up OBS Server}
+\subsection{software setup}
+\begin{frame}
+  \frametitle{Setup OBS Softwares}
+  \begin{itemize}
+    \item obs needs backends \& two rails applications
+    \item they can be installed via zypper
+  \end{itemize}
+\end{frame}
+
+\subsection{Setup meego build projects}
+
+\begin{frame}
+  \frametitle{Setup projects for meego build Part1: Create Projects}
+  Using oscl meta -e projectname
+  Workflow:\\
+  \begin{itemize}
+    \item Set name and description.
+    \item Add repositories and target archs.
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame} [fragile]
+  \frametitle{Setup projects for meego build Part 2: Prepare resources}
+  I have a script toolkit for setup resources, dowload from http://cnbjas56.cn.ebgroup.elektrobit.com/download/tools/obsmi.tar.bz2 \\
+  Workflow:\\
+  \begin{itemize}
+    \item Install obsmi, sudo ./setup install (./setup --help see more info)
+    \item Check your repos.conf, to manage resources to download.
+  \end{itemize}
+  Sample of repos.conf: \\
+  \lstset{language=}
+  \begin{lstlisting}
+[daily-core-armv7l]
+remote = http://repo.meego.com/MeeGo/builds/trunk/daily/core/repos/armv7l/packages
+local = /mirror/daily/core/armv7l
+link = meego armv7l core-armv7l
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Setup projects for meego build Part 3: Make links}
+  Now we have all packages ready, if you're using misched, links would create automatically, if not, you can use the tool 'milink' sepratedly. \\
+  USAGE: milink prj repo archfile localrepo [-u][-h]
+  An archfile is discribing a mapping relation from repo to obs building, here is a sample: \\
+
+  \lstset{language=perl}
+  \begin{lstlisting}
+  armv7l armv7el
+  noarch armv7el
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Setup projects for meego build Part 4: Using SubProjects}
+  Using subproject can reuse the exsiting projects' repository, we can setup and config subproject form the web interface\\
+\end{frame}
+
+\section{OBS Maintainance}
+
+\begin{frame}
+  \frametitle{Upgrate}
+  \begin{itemize}
+    \item Upgrate software
+    \item Check configs
+    \item Update database, rake db:migrate
+  \end{itemize}
+  
+\end{frame}
+\begin{frame}
+  \frametitle{Bakup OBS}
+  \begin{itemize}
+    \item backup database
+    \item backup projects contents
+    \item backup mirrors
+  \end{itemize}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+  OBS is good, enjoy using it. \\
+  Thank you for your attending.
+\end{frame}
+
+\end{document}
+
+% vim:set fenc=utf8:
+% vim:set ft=tex:
+
+
